@@ -1,0 +1,146 @@
+---
+title: 'Case Study: data in UK'
+author: "Yue Han"
+date: "2023-05-10"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+## Purpose 
+Determine what characteristics (variables) make someone more likely to smoke.
+
+## Dataset
+
+UK smoking dataset retrieved from [Kaggle](https://www.kaggle.com/datasets/utkarshx27/smoking-dataset-from-uk) original
+[source](https://www.stem.org.uk/resources/elibrary/resource/28452/large-datasets-stats4schools) with 1691 observations and 12 variables.
+
+### Dataset Reliability
+This dataset has been reviewed and been deemed factually accurate by the source's learning team.
+
+## Setup
+
+Preparing packages used.
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(ggcorrplot)
+```
+
+
+Importing dataset. 
+
+```{r}
+data = read.csv("smoking.csv")
+head(data)
+```
+
+
+## Diving into the Data
+
+```{r}
+data %>%  count(gender) %>% rename("amount"="n")
+```
+
+```{r}
+data %>%  count(marital_status) %>% rename("amount"="n")
+```
+```{r}
+data %>%  count(highest_qualification) %>% rename("amount"="n")
+```
+
+Here we have Refused and Unknown values. Instead of having both of these categories we will combine the two together. By checking again we see we have successfully combined the two. 
+```{r}
+data$nationality[data$nationality == "Refused" ] <- "Unknown"
+data %>%  count(nationality) %>% rename("amount"="n")
+```
+
+```{r}
+data %>%  count(ethnicity) %>% rename("amount"="n")
+```
+
+ 
+```{r}
+data %>%  count(gross_income) %>% rename("amount"="n")
+```
+Here we have Refused and Unknown values. Instead of having both of these categories we will combine the two together. By checking again we see we have successfully combined the two. 
+```{r}
+data$gross_income[data$gross_income == "Refused" ] <- "Unknown"
+data %>%  count(gross_income) %>% rename("amount"="n")
+```
+
+```{r}
+data %>%  count(region) %>% rename("amount"="n")
+```
+
+```{r}
+data %>%  count(smoke) %>% rename("amount"="n")
+```
+
+
+This means 75.1 % of the data has null values for the amt_weekends
+```{r}
+
+amt <- data %>% count(is.na(amt_weekends)) %>% 
+  rename("NA_value" = "is.na(amt_weekends)" ) %>% 
+  rename("amount"="n") 
+amt
+amt$amount[2]/(amt$amount[2] + amt$amount[1])
+
+```
+This means 75.1 % of the data has null values for the amt_weekdays too. 
+```{r}
+amt <- data %>% count(is.na(amt_weekdays)) %>% rename("NA_value" = "is.na(amt_weekdays)" ) %>% rename("amount"="n")
+amt$amount[2]/(amt$amount[2] + amt$amount[1])
+amt
+```
+
+Since this a high percentage I have decided to not include these two variables (amt_weekdays and amt_weekends)
+
+Similar action is taken for type where there are a large amount of null values also.
+```{r}
+data %>% count(type) %>% rename("amount"="n")
+```
+Additionally the first column called X is not useful for analysis since it is just the number of the row. We will also change the gender, marital_status, highest_qualification, nationality, ethnicity, gross_income, region, and smoke columns into factors.
+```{r}
+data <- data[2:10]
+data$gender <- as.factor(data$gender)
+data$marital_status <- as.factor(data$marital_status)
+data$highest_qualification <- as.factor(data$highest_qualification)
+data$nationality <- as.factor(data$nationality)
+data$ethnicity <- as.factor(data$ethnicity)
+data$gross_income <- as.factor(data$gross_income)
+data$region <- as.factor(data$region)
+data$smoke <- as.factor(data$smoke)
+head(data)
+```
+
+## Data Visualization of Data
+
+Some visualizations of data that could bring some insight on predicting who smokes.
+```{r}
+data %>%  group_by(nationality) %>% 
+  count(smoke) %>% rename("population" = "n") -> nat_smoke
+  
+  
+ggplot(data = nat_smoke, aes(x=nationality, y = population, fill = smoke)) + geom_bar(stat="identity") + scale_fill_brewer(palette="Set2")+
+  theme_minimal() #+ facet_wrap(~smoke)
+
+```
+```{r}
+data %>%  group_by(gender) %>% 
+  count(smoke) -> gend_smoke
+  
+ggplot(data = gend_smoke, aes(x=gender, y = n, fill = smoke)) +  labs(title="Comparison of Smokers to Non-Smokers by Gender", 
+         x="Gender", y = "Amount") + geom_bar(stat="identity") + scale_fill_brewer(palette="Set2") + theme_minimal()
+
+```
+
+
+To be continued
+
+
+
+
