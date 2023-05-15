@@ -3,8 +3,8 @@ title: 'Case Study: data in UK'
 author: "Yue Han"
 date: "2023-05-10"
 output:
-  pdf_document: default
   word_document: default
+  pdf_document: default
 ---
 
 ## Purpose 
@@ -18,7 +18,7 @@ UK smoking dataset retrieved from [Kaggle](https://www.kaggle.com/datasets/utkar
 ### Dataset Reliability
 This dataset has been reviewed and been deemed factually accurate by the source's learning team.
 
-## Setup
+## Setup and Data Cleaning
 
 Preparing packages used.
 
@@ -36,9 +36,72 @@ Importing dataset.
 data = read.csv("smoking.csv")
 head(data)
 ```
+There are 1691 rows and 13 columns.
+```{r}
+str(data)
+```
+Additionally the first column called X is not useful for analysis since it is just the number of the row. We will also change the gender, marital_status, highest_qualification, nationality, ethnicity, gross_income, region, smoke, and type columns into factors as they are categorical data.
+```{r}
+data <- data[2:13]
+data$gender <- as.factor(data$gender)
+data$marital_status <- as.factor(data$marital_status)
+data$highest_qualification <- as.factor(data$highest_qualification)
+data$nationality <- as.factor(data$nationality)
+data$ethnicity <- as.factor(data$ethnicity)
+data$gross_income <- as.factor(data$gross_income)
+data$region <- as.factor(data$region)
+data$smoke <- as.factor(data$smoke)
+data$type <- as.factor(data$type)
+head(data)
+```
+
+Here we have Refused and Unknown values. Instead of having both of these categories we will combine the two together. By checking again we see we have successfully combined the two. 
+```{r}
+data$nationality[data$nationality == "Refused" ] <- "Unknown"
+data %>%  count(nationality) %>% rename("amount"="n")
+```
+
+
+Similarly, we do this for gross_income. By checking again we see we have successfully combined the two. 
+```{r}
+data$gross_income[data$gross_income == "Refused" ] <- "Unknown"
+data %>%  count(gross_income) %>% rename("amount"="n")
+```
+
+This means 75.1 % of the data has null values for the amt_weekends
+```{r}
+
+amt <- data %>% count(is.na(amt_weekends)) %>% 
+  rename("NA_value" = "is.na(amt_weekends)" ) %>% 
+  rename("amount"="n") 
+amt
+amt$amount[2]/(amt$amount[2] + amt$amount[1])
+
+```
+
+This means 75.1 % of the data has null values for the amt_weekdays too. 
+```{r}
+amt <- data %>% count(is.na(amt_weekdays)) %>% rename("NA_value" = "is.na(amt_weekdays)" ) %>% rename("amount"="n")
+amt$amount[2]/(amt$amount[2] + amt$amount[1])
+amt
+```
+
+Since this is a high percentage I have decided to not include these two variables (amt_weekdays and amt_weekends)
+
+Similar action is taken for type where there are a large amount of null values also.
+```{r}
+data %>% count(type) %>% rename("amount"="n")
+```
+Thus after eliminating those variables we have the following dataset.
+```{r}
+data <- data[1:9]
+head(data)
+```
+
 
 
 ## Diving into the Data
+
 
 ```{r}
 data %>%  count(gender) %>% rename("amount"="n")
@@ -51,9 +114,7 @@ data %>%  count(marital_status) %>% rename("amount"="n")
 data %>%  count(highest_qualification) %>% rename("amount"="n")
 ```
 
-Here we have Refused and Unknown values. Instead of having both of these categories we will combine the two together. By checking again we see we have successfully combined the two. 
 ```{r}
-data$nationality[data$nationality == "Refused" ] <- "Unknown"
 data %>%  count(nationality) %>% rename("amount"="n")
 ```
 
@@ -65,11 +126,7 @@ data %>%  count(ethnicity) %>% rename("amount"="n")
 ```{r}
 data %>%  count(gross_income) %>% rename("amount"="n")
 ```
-Here we have Refused and Unknown values. Instead of having both of these categories we will combine the two together. By checking again we see we have successfully combined the two. 
-```{r}
-data$gross_income[data$gross_income == "Refused" ] <- "Unknown"
-data %>%  count(gross_income) %>% rename("amount"="n")
-```
+
 
 ```{r}
 data %>%  count(region) %>% rename("amount"="n")
@@ -79,43 +136,6 @@ data %>%  count(region) %>% rename("amount"="n")
 data %>%  count(smoke) %>% rename("amount"="n")
 ```
 
-
-This means 75.1 % of the data has null values for the amt_weekends
-```{r}
-
-amt <- data %>% count(is.na(amt_weekends)) %>% 
-  rename("NA_value" = "is.na(amt_weekends)" ) %>% 
-  rename("amount"="n") 
-amt
-amt$amount[2]/(amt$amount[2] + amt$amount[1])
-
-```
-This means 75.1 % of the data has null values for the amt_weekdays too. 
-```{r}
-amt <- data %>% count(is.na(amt_weekdays)) %>% rename("NA_value" = "is.na(amt_weekdays)" ) %>% rename("amount"="n")
-amt$amount[2]/(amt$amount[2] + amt$amount[1])
-amt
-```
-
-Since this a high percentage I have decided to not include these two variables (amt_weekdays and amt_weekends)
-
-Similar action is taken for type where there are a large amount of null values also.
-```{r}
-data %>% count(type) %>% rename("amount"="n")
-```
-Additionally the first column called X is not useful for analysis since it is just the number of the row. We will also change the gender, marital_status, highest_qualification, nationality, ethnicity, gross_income, region, and smoke columns into factors.
-```{r}
-data <- data[2:10]
-data$gender <- as.factor(data$gender)
-data$marital_status <- as.factor(data$marital_status)
-data$highest_qualification <- as.factor(data$highest_qualification)
-data$nationality <- as.factor(data$nationality)
-data$ethnicity <- as.factor(data$ethnicity)
-data$gross_income <- as.factor(data$gross_income)
-data$region <- as.factor(data$region)
-data$smoke <- as.factor(data$smoke)
-head(data)
-```
 
 ## Data Visualization of Data
 
